@@ -4,6 +4,8 @@ import { ShieldAlert, User, Lock, ArrowRight, CheckCircle2, Eye, EyeOff, UserPlu
 import { loginWithEmail, signUpWithEmail, loginWithGoogle, resetPassword } from '../services/firebase/auth';
 import { usersRef } from '../services/firebase/firestore';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getRedirectResult } from 'firebase/auth';
+import { auth } from '../firebase/config';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
@@ -27,6 +29,40 @@ const Login = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Handle Capacitor Google Sign-in Redirect Result
+  React.useEffect(() => {
+    getRedirectResult(auth).then(async (result) => {
+      if (result && result.user) {
+        setIsLoading(true);
+        const user = result.user;
+        try {
+          const userDocRef = doc(usersRef, user.uid);
+          const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 500));
+          const userSnap: any = await Promise.race([getDoc(userDocRef).catch(() => null), timeoutPromise]);
+          if (!userSnap || !userSnap.exists()) {
+            const defaultRole = user.email?.toLowerCase().includes('inspector') ? 'INSPECTOR' : 'ADMIN';
+            await setDoc(userDocRef, {
+              name: user.displayName || 'Google User',
+              email: user.email,
+              role: defaultRole,
+              status: 'active',
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp()
+            }).catch(() => {});
+          }
+          await routeUserByRole(user.uid, user.email, user.email?.toLowerCase().includes('inspector') ? 'INSPECTOR' : 'ADMIN');
+        } catch (e) {
+          console.warn(e);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    }).catch((err) => {
+      console.error(err);
+      setError('Google Sign-In failed.');
+    });
+  }, []);
 
   const routeUserByRole = async (uid: string, userEmail: string | null, preferredRole?: string) => {
     try {
@@ -197,6 +233,7 @@ const Login = () => {
     setIsLoading(true);
     try {
       const user = await loginWithGoogle();
+      if (!user) return; // Capacitor redirect started
       
       // Provision Google user in Firestore if they don't exist
       try {

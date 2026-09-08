@@ -5,8 +5,10 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
-  signOut 
+  signOut,
+  signInWithRedirect
 } from 'firebase/auth';
+import { Capacitor } from '@capacitor/core';
 import { app } from './config';
 
 // Initialize Firebase Authentication and get a reference to the service
@@ -17,8 +19,13 @@ const googleProvider = new GoogleAuthProvider();
 
 export const loginWithGoogle = async () => {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
+    if (Capacitor.isNativePlatform()) {
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    } else {
+      const result = await signInWithPopup(auth, googleProvider);
+      return result.user;
+    }
   } catch (error) {
     console.error("Google Sign-In Error", error);
     throw error;
