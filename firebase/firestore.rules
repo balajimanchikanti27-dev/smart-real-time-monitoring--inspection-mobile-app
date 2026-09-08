@@ -1,0 +1,194 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --------------------------------------------------------------------------------
+    // REUSABLE AUTH & ROLE FUNCTIONS
+    // --------------------------------------------------------------------------------
+    
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && getUserData().role == 'SUPER_ADMIN';
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role == 'ADMIN';
+    }
+
+    function isInspector() {
+      return isAuthenticated() && getUserData().role == 'INSPECTOR';
+    }
+
+    function isOrganization() {
+      return isAuthenticated() && getUserData().role == 'ORGANIZATION';
+    }
+
+    function isCoreStaff() {
+      return isSuperAdmin() || isAdmin();
+    }
+
+    function isNotChangingRole() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+    }
+
+    function isDemoRecord() {
+      return resource.data.isDemo == true;
+    }
+
+    // --------------------------------------------------------------------------------
+    // DEFAULT DENY ALL (Use default-deny behavior and explicit rules)
+    // --------------------------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --------------------------------------------------------------------------------
+    // 1. Users Collection
+    // --------------------------------------------------------------------------------
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isCoreStaff());
+      allow create: if isAuthenticated() && request.auth.uid == userId && request.resource.data.role != 'SUPER_ADMIN';
+      allow update: if isAuthenticated() && request.auth.uid == userId && isNotChangingRole();
+      allow write: if isSuperAdmin();
+    }
+
+    // --------------------------------------------------------------------------------
+    // 2. Organizations, Institutions, NGOs, Projects
+    // --------------------------------------------------------------------------------
+    match /institutions/{instId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isCoreStaff();
+      allow delete: if isSuperAdmin() && isDemoRecord();
+    }
+
+    match /ngos/{ngoId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isCoreStaff();
+      allow delete: if isSuperAdmin() && isDemoRecord();
+    }
+
+    match /projects/{projectId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isCoreStaff();
+      allow delete: if isSuperAdmin() && isDemoRecord();
+    }
+    
+    match /schemes/{schemeId} {
+      allow read: if isAuthenticated();
+      allow write: if isCoreStaff();
+    }
+
+    // --------------------------------------------------------------------------------
+    // 3. Inspections & Assignments
+    // --------------------------------------------------------------------------------
+    match /inspections/{inspectionId} {
+      allow read, write: if isCoreStaff();
+      
+      // Inspector can read own assignments
+      allow read: if isInspector() && resource.data.inspectorId == request.auth.uid;
+      // Inspector can update own assignments, but cannot reassign to someone else
+      allow update: if isInspector() && 
+                    resource.data.inspectorId == request.auth.uid && 
+                    request.resource.data.inspectorId == request.auth.uid;
+                    
+      // Organization can read its own inspections
+      allow read: if isOrganization() && resource.data.organizationId == request.auth.uid;
+    }
+
+    match /inspectionChecklists/{checklistId} {
+      allow read, write: if isCoreStaff();
+      allow read, write: if isInspector() && 
+        get(/databases/$(database)/documents/inspections/$(request.resource.data.inspectionId)).data.inspectorId == request.auth.uid;
+    }
+
+    // --------------------------------------------------------------------------------
+    // 4. Findings
+    // --------------------------------------------------------------------------------
+    match /inspectionFindings/{findingId} {
+      allow read, write: if isCoreStaff();
+      
+      // Inspector: Own assigned inspections and permitted inspection data
+      allow read, create, update: if isInspector() && 
+        get(/databases/$(database)/documents/inspections/$(request.resource.data.inspectionId)).data.inspectorId == request.auth.uid;
+      
+      // Organization: Own data only
+      allow read: if isOrganization() && 
+        get(/databases/$(database)/documents/inspections/$(resource.data.inspectionId)).data.organizationId == request.auth.uid;
+        
+      // Finding: Organization cannot falsely verify its own finding
+      allow update: if isOrganization() && 
+        get(/databases/$(database)/documents/inspections/$(resource.data.inspectionId)).data.organizationId == request.auth.uid &&
+        request.resource.data.status != 'VERIFIED';
+    }
+
+    // --------------------------------------------------------------------------------
+    // 5. Evidence Metadata
+    // --------------------------------------------------------------------------------
+    match /evidence/{evidenceId} {
+      allow read, write: if isCoreStaff();
+      
+      allow read, create, delete: if isInspector() && 
+        get(/databases/$(database)/documents/inspections/$(request.resource.data.inspectionId)).data.inspectorId == request.auth.uid;
+        
+      allow read: if isOrganization();
+    }
+
+    // --------------------------------------------------------------------------------
+    // 6. Reports
+    // --------------------------------------------------------------------------------
+    match /reports/{reportId} {
+      allow read, write: if isCoreStaff();
+      allow read: if isAuthenticated() && (resource.data.inspectorId == request.auth.uid || resource.data.organizationId == request.auth.uid);
+      allow create: if isAuthenticated();
+    }
+
+    // --------------------------------------------------------------------------------
+    // 7. Notifications & Alerts
+    // --------------------------------------------------------------------------------
+    match /notifications/{notificationId} {
+      allow read, write: if isCoreStaff();
+      allow read, update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    match /alerts/{alertId} {
+      allow read, write: if isCoreStaff();
+      allow read, update: if isAuthenticated() && resource.data.entityId == request.auth.uid;
+    }
+
+    // --------------------------------------------------------------------------------
+    // 8. Audit Logs
+    // --------------------------------------------------------------------------------
+    match /auditLogs/{logId} {
+      // Normal users cannot update/delete
+      allow update, delete: if false; 
+      
+      // Anyone authenticated can create
+      allow create: if isAuthenticated();
+      
+      // Only SUPER_ADMIN can read
+      allow read: if isSuperAdmin();
+    }
+
+    // --------------------------------------------------------------------------------
+    // 9. CCTV Metadata
+    // --------------------------------------------------------------------------------
+    match /cctvDevices/{deviceId} {
+      allow read, write: if isCoreStaff();
+      allow read: if isAuthenticated();
+    }
+    match /cctvEvents/{eventId} {
+      allow read, write: if isCoreStaff();
+      allow read: if isAuthenticated();
+    }
+    
+  }
+}
