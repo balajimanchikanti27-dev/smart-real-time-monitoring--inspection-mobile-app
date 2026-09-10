@@ -26,7 +26,8 @@ export default function ProjectForm({ initialData, isOpen, onClose, onSave }: Pr
     status: 'PLANNED',
     progress: 0,
     projectType: '',
-    isDemo: false
+    isDemo: false,
+    contactPhone: ''
   });
 
   // State to hold both Institutions and NGOs for the dropdown
@@ -121,7 +122,8 @@ export default function ProjectForm({ initialData, isOpen, onClose, onSave }: Pr
           status: 'PLANNED',
           progress: 0,
           projectType: '',
-          isDemo: false
+          isDemo: false,
+          contactPhone: ''
         });
         setStartDateStr(new Date().toISOString().split('T')[0]);
         setEndDateStr('');
@@ -225,6 +227,17 @@ export default function ProjectForm({ initialData, isOpen, onClose, onSave }: Pr
                   className="w-full border border-slate-300 p-2 rounded-sm text-sm focus:ring-1 focus:ring-primary focus:border-primary"
                   value={formData.schemeName}
                   onChange={(e) => setFormData({...formData, schemeName: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Project Contact Phone (For SMS Notifications)</label>
+                <input 
+                  type="tel" 
+                  className="w-full border border-slate-300 p-2 rounded-sm text-sm focus:ring-1 focus:ring-primary focus:border-primary"
+                  value={formData.contactPhone || ''}
+                  onChange={(e) => setFormData({...formData, contactPhone: e.target.value})}
+                  placeholder="e.g. 9876543210"
                 />
               </div>
 

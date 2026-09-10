@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import * as nodemailer from "nodemailer";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 admin.initializeApp();
 const db = getFirestore();
@@ -167,3 +167,118 @@ export const onInspectorCreated = functions.firestore
       }
     }
   });
+
+// --------------------------------------------------------------------------------
+// Callable Functions for SMS Notifications
+// --------------------------------------------------------------------------------
+
+// Initialize Twilio using require to avoid TS export conflicts
+const twilioSDK = require("twilio");
+const twilioClient = twilioSDK(
+  process.env.TWILIO_ACCOUNT_SID || "",
+  process.env.TWILIO_AUTH_TOKEN || ""
+);
+
+export const sendSubmissionSms = functions.https.onCall(async (data, context) => {
+  // Validate request
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Must be logged in to send SMS");
+  }
+
+  const { moduleType, recordName, recordId, mobileNumber } = data;
+
+  if (!moduleType || !recordId || !mobileNumber) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing required fields");
+  }
+
+  // Format and validate phone number (simple validation, add +91 if 10 digits)
+  let formattedNumber = mobileNumber.trim();
+  if (/^\d{10}$/.test(formattedNumber)) {
+    formattedNumber = `+91${formattedNumber}`;
+  }
+
+  if (!/^\+?[1-9]\d{1,14}$/.test(formattedNumber)) {
+    throw new functions.https.HttpsError("invalid-argument", "Invalid phone number format");
+  }
+
+  // Check idempotency (prevent duplicates)
+  const notificationId = `sms_${moduleType}_${recordId}`;
+  const logRef = db.collection("notification_logs").doc(notificationId);
+  
+  try {
+    const doc = await logRef.get();
+    if (doc.exists && doc.data()?.status === "delivered") {
+      console.log(`SMS already delivered for ${notificationId}`);
+      return { success: true, message: "Already delivered" };
+    }
+
+    // Determine message text based on moduleType
+    let messageText = "";
+    if (moduleType === "Institution") {
+      messageText = `Smart Inspect: New Institution "${recordName}" has been successfully submitted. Reference ID: ${recordId}.`;
+    } else if (moduleType === "NGO") {
+      messageText = `Smart Inspect: New NGO "${recordName}" has been successfully submitted. Reference ID: ${recordId}.`;
+    } else if (moduleType === "Project") {
+      messageText = `Smart Inspect: New Project "${recordName}" has been successfully created. Reference ID: ${recordId}.`;
+    } else if (moduleType === "Inspection") {
+      messageText = `Smart Inspect: Inspection "${recordId}" has been successfully submitted.`;
+    } else if (moduleType === "Inspector") {
+      messageText = `Smart Inspect: Inspector "${recordName}" has been successfully added. Reference ID: ${recordId}.`;
+    } else {
+      messageText = `Smart Inspect: New ${moduleType} "${recordName}" has been successfully submitted. Reference ID: ${recordId}.`;
+    }
+
+    // Send SMS
+    if (!process.env.TWILIO_PHONE_NUMBER || !process.env.TWILIO_ACCOUNT_SID) {
+      console.warn("Twilio credentials not configured. Skipping SMS.");
+      await logRef.set({
+        notificationId,
+        moduleType,
+        recordId,
+        recipient: formattedNumber,
+        type: "SMS",
+        timestamp: FieldValue.serverTimestamp(),
+        status: "failed",
+        error: "Twilio credentials not configured"
+      });
+      return { success: false, error: "Twilio credentials not configured" };
+    }
+
+    const message = await twilioClient.messages.create({
+      body: messageText,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: formattedNumber,
+    });
+
+    // Log success
+    await logRef.set({
+      notificationId,
+      moduleType,
+      recordId,
+      recipient: formattedNumber,
+      type: "SMS",
+      timestamp: FieldValue.serverTimestamp(),
+      status: "delivered",
+      messageSid: message.sid
+    });
+
+    return { success: true };
+
+  } catch (error: any) {
+    console.error("Error sending SMS:", error);
+    
+    // Log error
+    await logRef.set({
+      notificationId,
+      moduleType,
+      recordId,
+      recipient: formattedNumber,
+      type: "SMS",
+      timestamp: FieldValue.serverTimestamp(),
+      status: "failed",
+      error: error.message || "Unknown error"
+    });
+
+    return { success: false, error: error.message };
+  }
+});

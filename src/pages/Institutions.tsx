@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { sendSmsNotification } from '../services/smsService';
 import { useNavigate } from 'react-router-dom';
 import { query, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { institutionsRef } from '../services/firebase/firestore';
@@ -74,7 +75,25 @@ export default function Institutions() {
         
         const newInst = { id: docRef.id, ...data, status: data.status || 'ACTIVE' } as Institution;
         setInstitutions(prev => [newInst, ...prev]);
-        setSuccess('Institution created successfully. Confirmation email sent to your registered address.');
+        
+        // Trigger SMS
+        if (data.contactPhone) {
+          const smsResult = await sendSmsNotification({
+            moduleType: 'Institution',
+            recordName: data.name || '',
+            recordId: docRef.id,
+            mobileNumber: data.contactPhone
+          });
+
+          if (smsResult.success) {
+            const maskedPhone = data.contactPhone.replace(/.(?=.{4})/g, '*');
+            setSuccess(`Institution created successfully. SMS notification sent to ${maskedPhone}. Confirmation email sent to your registered address.`);
+          } else {
+            setSuccess(`Institution created successfully. SMS notification could not be sent at this time. Confirmation email sent to your registered address.`);
+          }
+        } else {
+          setSuccess('Institution created successfully. Confirmation email sent to your registered address.');
+        }
       }
       setIsFormOpen(false);
       setEditingInst(undefined);

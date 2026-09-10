@@ -72,6 +72,7 @@ export interface Project {
   updatedAt: FirestoreDate;
   createdBy: string;
   updatedBy: string;
+  contactPhone?: string;
 }
 
 export interface Inspector {

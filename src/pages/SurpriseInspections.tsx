@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { sendSmsNotification } from '../services/smsService';
 import { useNavigate } from 'react-router-dom';
 import { getDocs, query, where } from 'firebase/firestore';
 import { institutionsRef, ngosRef, projectsRef } from '../services/firebase/firestore';
@@ -38,6 +39,7 @@ export default function SurpriseInspections() {
   const [selectedTarget, setSelectedTarget] = useState<Institution | NGO | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('high');
+  const [notificationMobile, setNotificationMobile] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -118,6 +120,15 @@ export default function SurpriseInspections() {
     setLoading(false);
     
     if (result.success) {
+      if (notificationMobile) {
+        await sendSmsNotification({
+          moduleType: 'Inspection',
+          recordName: targetName,
+          recordId: result.inspectionId || 'N/A',
+          mobileNumber: notificationMobile
+        });
+      }
+      
       setAssignmentResult({
         success: true,
         inspectorName: result.inspectorName,
@@ -321,6 +332,17 @@ export default function SurpriseInspections() {
                         </button>
                       ))}
                    </div>
+                 </div>
+
+                 <div>
+                   <label className="block text-sm font-bold text-slate-700 mb-2">Notification Mobile Number (For SMS)</label>
+                   <input
+                     type="tel"
+                     placeholder="e.g. 9876543210"
+                     value={notificationMobile}
+                     onChange={(e) => setNotificationMobile(e.target.value)}
+                     className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                   />
                  </div>
                  
                  <div className="p-6 bg-red-50 rounded-xl border border-red-100 space-y-4">

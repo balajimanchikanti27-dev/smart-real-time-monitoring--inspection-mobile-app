@@ -165,7 +165,7 @@ export default function Dashboard() {
             {/* Live Camera Snapshot Preview */}
             <div className="relative aspect-video rounded-lg overflow-hidden bg-black border border-slate-700 shadow-inner group">
               <img
-                src="/vignan_a_block.jpg"
+                src="https://www.collegebatch.com/static/clg-gallery/vignan-university-guntur-363031.webp"
                 alt="vignan a block main cam"
                 className="w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-300"
               />

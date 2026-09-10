@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { sendSmsNotification } from '../services/smsService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getNGOs, createNGO, updateNGO, deleteNGO } from '../services/ngoService';
 import type { NGO } from '../types/firestore';
@@ -63,8 +64,26 @@ export default function NGOs() {
         await updateNGO(editingNgo.id, data as Partial<Omit<NGO, 'id' | 'createdAt' | 'createdBy'>>);
         setSuccess('NGO updated successfully.');
       } else {
-        await createNGO(data as Omit<NGO, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>);
-        setSuccess('NGO created successfully. Confirmation email sent to your registered address.');
+        const newNgo = await createNGO(data as Omit<NGO, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>);
+        
+        // Trigger SMS
+        if (data.contactPhone) {
+          const smsResult = await sendSmsNotification({
+            moduleType: 'NGO',
+            recordName: data.name || '',
+            recordId: newNgo.id,
+            mobileNumber: data.contactPhone
+          });
+
+          if (smsResult.success) {
+            const maskedPhone = data.contactPhone.replace(/.(?=.{4})/g, '*');
+            setSuccess(`NGO created successfully. SMS notification sent to ${maskedPhone}. Confirmation email sent to your registered address.`);
+          } else {
+            setSuccess(`NGO created successfully. SMS notification could not be sent at this time. Confirmation email sent to your registered address.`);
+          }
+        } else {
+          setSuccess('NGO created successfully. Confirmation email sent to your registered address.');
+        }
       }
       setIsFormOpen(false);
       setEditingNgo(undefined);

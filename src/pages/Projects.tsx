@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { sendSmsNotification } from '../services/smsService';
 import { useNavigate } from 'react-router-dom';
 import { getProjects, createProject, updateProject, deleteProject } from '../services/projectService';
 import { getDocs } from 'firebase/firestore';
@@ -88,8 +89,26 @@ export default function Projects() {
         await updateProject(editingProject.id, data as Partial<Omit<Project, 'id' | 'createdAt' | 'createdBy'>>);
         setSuccess('Project updated successfully.');
       } else {
-        await createProject(data as Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>);
-        setSuccess('Project created successfully. Confirmation email sent to your registered address.');
+        const newProject = await createProject(data as Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>);
+        
+        // Trigger SMS
+        if (data.contactPhone) {
+          const smsResult = await sendSmsNotification({
+            moduleType: 'Project',
+            recordName: data.name || '',
+            recordId: newProject.id || 'N/A',
+            mobileNumber: data.contactPhone
+          });
+
+          if (smsResult.success) {
+            const maskedPhone = data.contactPhone.replace(/.(?=.{4})/g, '*');
+            setSuccess(`Project created successfully. SMS notification sent to ${maskedPhone}. Confirmation email sent to your registered address.`);
+          } else {
+            setSuccess(`Project created successfully. SMS notification could not be sent at this time. Confirmation email sent to your registered address.`);
+          }
+        } else {
+          setSuccess('Project created successfully. Confirmation email sent to your registered address.');
+        }
       }
       setIsFormOpen(false);
       setEditingProject(undefined);

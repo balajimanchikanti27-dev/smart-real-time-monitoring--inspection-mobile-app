@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { sendSmsNotification } from '../services/smsService';
 import { useNavigate } from 'react-router-dom';
 import { 
   UserSquare2, Search, Plus, ShieldCheck, 
@@ -27,7 +28,8 @@ export default function Inspectors() {
     state: 'Delhi',
     district: 'New Delhi',
     specialization: 'INFRASTRUCTURE',
-    availabilityStatus: 'AVAILABLE' as const
+    availabilityStatus: 'AVAILABLE' as const,
+    mobileNumber: ''
   });
 
   // Filtered list
@@ -102,6 +104,26 @@ export default function Inspectors() {
 
     setInspectors([created, ...inspectors]);
     setIsAddModalOpen(false);
+    
+    // Trigger SMS
+    if (newOfficer.mobileNumber) {
+      sendSmsNotification({
+        moduleType: 'Inspector',
+        recordName: newOfficer.name,
+        recordId: created.inspectorId,
+        mobileNumber: newOfficer.mobileNumber
+      }).then(smsResult => {
+        if (smsResult.success) {
+          const masked = newOfficer.mobileNumber.replace(/.(?=.{4})/g, '*');
+          alert(`Inspector added successfully. SMS sent to ${masked}.`);
+        } else {
+          alert(`Inspector added successfully, but SMS could not be sent.`);
+        }
+      });
+    } else {
+      alert(`Inspector added successfully.`);
+    }
+
     setNewOfficer({
       name: '',
       employeeCode: '',
@@ -110,7 +132,8 @@ export default function Inspectors() {
       state: 'Delhi',
       district: 'New Delhi',
       specialization: 'INFRASTRUCTURE',
-      availabilityStatus: 'AVAILABLE'
+      availabilityStatus: 'AVAILABLE',
+      mobileNumber: ''
     });
   };
 
@@ -461,6 +484,17 @@ export default function Inspectors() {
                     placeholder="EMP-016"
                     value={newOfficer.employeeCode}
                     onChange={(e) => setNewOfficer({...newOfficer, employeeCode: e.target.value})}
+                    className="w-full px-3 py-1.5 border border-slate-300 rounded outline-none focus:ring-1 focus:ring-primary font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Mobile Number</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="e.g. 9876543210"
+                    value={newOfficer.mobileNumber}
+                    onChange={(e) => setNewOfficer({...newOfficer, mobileNumber: e.target.value})}
                     className="w-full px-3 py-1.5 border border-slate-300 rounded outline-none focus:ring-1 focus:ring-primary font-mono"
                   />
                 </div>
