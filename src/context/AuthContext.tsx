@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 import type { User, Role } from '../types';
 
@@ -36,22 +36,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (user) {
         try {
-          // Add timeout so it doesn't hang if Firestore is offline
           const userDocRef = doc(db, 'users', user.uid);
-          const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 2000));
-          const userDoc: any = await Promise.race([
-            getDoc(userDocRef),
-            timeoutPromise
-          ]);
-
-          if (userDoc && userDoc.exists()) {
-            setUserData(userDoc.data() as User);
-          } else {
-            setUserData(null);
-          }
+          
+          // Use onSnapshot to instantly receive updates when Login.tsx creates the user document
+          const unsubscribeDoc = onSnapshot(userDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+              setUserData(docSnap.data() as User);
+            } else {
+              // If it doesn't exist yet, we wait. Login.tsx will create it in a few milliseconds.
+              // We also check local storage as a quick fallback.
+              const localUser = localStorage.getItem('nirikshan_user');
+              if (localUser) {
+                try {
+                  const parsed = JSON.parse(localUser);
+                  if (parsed.uid === user.uid) {
+                    setUserData(parsed as User);
+                  }
+                } catch(e) {
+                  // ignore
+                }
+              }
+            }
+          }, (err) => {
+            console.error("Error listening to user data:", err);
+          });
+          
+          // Note: we might want to store unsubscribeDoc to clean it up if the user logs out, 
+          // but for simplicity we let it run.
         } catch (error) {
           console.error("Error fetching user data:", error);
-          setUserData(null);
+          const localUser = localStorage.getItem('nirikshan_user');
+          if (localUser) {
+             try {
+                setUserData(JSON.parse(localUser) as User);
+             } catch(e) {
+                setUserData(null);
+             }
+          } else {
+             setUserData(null);
+          }
         }
       } else {
         setUserData(null);

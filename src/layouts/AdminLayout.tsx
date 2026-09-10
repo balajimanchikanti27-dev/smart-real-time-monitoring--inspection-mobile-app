@@ -29,7 +29,7 @@ const AdminLayout = () => {
       <header className="bg-primary text-white h-16 flex items-center justify-between px-6 shadow-md z-10">
         <div className="flex items-center gap-3">
           {/* Logo Image Placeholder (User will save logo.png to public folder) */}
-          <img src="/logo.png" alt="Nirikshan Logo" className="h-10 w-auto object-contain fallback-icon" 
+          <img src="/logo.png" alt="Smart Inspect Logo" className="h-10 w-auto object-contain fallback-icon" 
                onError={(e) => {
                  // Fallback if logo.png is not yet added to public folder
                  e.currentTarget.style.display = 'none';
@@ -38,8 +38,8 @@ const AdminLayout = () => {
           />
           <ShieldAlert className="w-8 h-8 text-accent hidden" />
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold tracking-wide leading-tight">NIRIKSHAN</h1>
-            <p className="text-[10px] text-gray-300 tracking-wider">SMART INSPECTION & MONITORING</p>
+            <h1 className="text-xl font-bold tracking-wide leading-tight">Smart Inspect</h1>
+            <p className="text-[10px] text-gray-300 tracking-wider">Smart Inspect & MONITORING</p>
           </div>
         </div>
         

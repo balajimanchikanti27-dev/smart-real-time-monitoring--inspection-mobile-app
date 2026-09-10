@@ -202,7 +202,7 @@ export default function CCTVDashboard() {
     ctx.fillText('GOVERNMENT OF INDIA • MINISTRY OF SOCIAL JUSTICE & EMPOWERMENT', 30, 40);
     ctx.font = 'bold 16px sans-serif';
     ctx.fillStyle = '#38bdf8';
-    ctx.fillText('NIRIKSHAN STATUTORY VIGILANCE SURVEILLANCE EVIDENCE ARCHIVE', 30, 65);
+    ctx.fillText('Smart Inspect STATUTORY VIGILANCE SURVEILLANCE EVIDENCE ARCHIVE', 30, 65);
 
     // Stamp center details
     ctx.fillStyle = '#22c55e';
@@ -231,7 +231,7 @@ export default function CCTVDashboard() {
 
     // Trigger download
     const link = document.createElement('a');
-    link.download = `NIRIKSHAN_CCTV_${cam.id}_${Date.now()}.png`;
+    link.download = `Smart Inspect_CCTV_${cam.id}_${Date.now()}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
 

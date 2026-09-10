@@ -78,11 +78,17 @@ export default function WelcomeAnimation() {
               }}
               className="relative z-30 w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left pointer-events-none order-1 md:order-2"
             >
-              <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-light text-slate-300 tracking-[0.2em] drop-shadow-lg mb-2">
-                WELCOME TO
+              <h2 
+                className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-light text-slate-300 tracking-[0.2em] drop-shadow-lg mb-2"
+                style={{ fontFamily: "'Outfit', sans-serif" }}
+              >
+                Welcome to
               </h2>
-              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-[7rem] leading-none font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-400 tracking-tighter drop-shadow-2xl whitespace-nowrap">
-                NIRIKSHAN
+              <h1 
+                className="text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-[7rem] leading-none font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-400 tracking-tighter drop-shadow-2xl whitespace-nowrap"
+                style={{ fontFamily: "'Outfit', sans-serif" }}
+              >
+                Smart Inspect
               </h1>
             </motion.div>
 

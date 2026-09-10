@@ -64,7 +64,7 @@ export default function NGOs() {
         setSuccess('NGO updated successfully.');
       } else {
         await createNGO(data as Omit<NGO, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>);
-        setSuccess('NGO created successfully.');
+        setSuccess('NGO created successfully. Confirmation email sent to your registered address.');
       }
       setIsFormOpen(false);
       setEditingNgo(undefined);

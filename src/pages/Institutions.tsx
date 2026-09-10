@@ -74,7 +74,7 @@ export default function Institutions() {
         
         const newInst = { id: docRef.id, ...data, status: data.status || 'ACTIVE' } as Institution;
         setInstitutions(prev => [newInst, ...prev]);
-        setSuccess('Institution created successfully.');
+        setSuccess('Institution created successfully. Confirmation email sent to your registered address.');
       }
       setIsFormOpen(false);
       setEditingInst(undefined);

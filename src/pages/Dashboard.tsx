@@ -165,15 +165,15 @@ export default function Dashboard() {
             {/* Live Camera Snapshot Preview */}
             <div className="relative aspect-video rounded-lg overflow-hidden bg-black border border-slate-700 shadow-inner group">
               <img
-                src="https://images.unsplash.com/photo-1577495508048-b635879837f1?w=500&auto=format&fit=crop&q=80"
-                alt="Live Surveillance"
+                src="/vignan_a_block.jpg"
+                alt="vignan a block main cam"
                 className="w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-300"
               />
               <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.3)_50%)] bg-[length:100%_4px] pointer-events-none opacity-40"></div>
               
               <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                <span className="bg-black/75 text-white font-mono text-[9px] px-1.5 py-0.5 rounded border border-white/20">
-                  CAM-01 • Main Gate
+                <span className="bg-black/75 text-white font-mono text-[9px] px-1.5 py-0.5 rounded border border-white/20 uppercase">
+                  vignan a block main cam
                 </span>
               </div>
               <div className="absolute top-2 right-2 bg-red-600 text-white font-mono text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">

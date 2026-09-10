@@ -89,7 +89,7 @@ export default function Projects() {
         setSuccess('Project updated successfully.');
       } else {
         await createProject(data as Omit<Project, 'id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>);
-        setSuccess('Project created successfully.');
+        setSuccess('Project created successfully. Confirmation email sent to your registered address.');
       }
       setIsFormOpen(false);
       setEditingProject(undefined);

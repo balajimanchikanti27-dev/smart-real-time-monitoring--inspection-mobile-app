@@ -107,7 +107,7 @@ export const defaultInspections: Inspection[] = [
     findingsList: [
       { id: 'FND-401', title: 'Resident Doctor Absent for 3 Consecutive Days', severity: 'CRITICAL', category: 'Staffing', actionRequired: 'Immediate deployment of registered medical practitioner with MBBS credential.', status: 'OPEN' },
       { id: 'FND-402', title: 'Expired Psychotropic Medication in Dispensary', severity: 'CRITICAL', category: 'Safety', actionRequired: 'Safely confiscate expired stock and produce pharmacy disposal manifest.', status: 'OPEN' },
-      { id: 'FND-403', title: 'Main Perimeter CCTV Camera Intentionally Unplugged', severity: 'HIGH', category: 'Infrastructure', actionRequired: 'Restore continuous RTSP feed to NIRIKSHAN cloud gateway.', status: 'RESOLVED' }
+      { id: 'FND-403', title: 'Main Perimeter CCTV Camera Intentionally Unplugged', severity: 'HIGH', category: 'Infrastructure', actionRequired: 'Restore continuous RTSP feed to Smart Inspect cloud gateway.', status: 'RESOLVED' }
     ],
     evidencePhotos: [
       { id: 'EV-401', title: 'Dispensary Expired Batch Photo', url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80', timestamp: '2024-01-18T15:20:00Z', geotag: { lat: 17.3850, lng: 78.4867 } }

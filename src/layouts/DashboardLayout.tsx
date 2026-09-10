@@ -181,8 +181,8 @@ export default function DashboardLayout() {
         <div className="h-16 flex items-center justify-between px-4 border-b border-white/10 bg-primary-dark shrink-0">
           {(sidebarOpen || mobileMenuOpen) && (
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="NIRIKSHAN" className="h-8 object-contain" />
-              <span className="font-bold text-base tracking-widest text-white truncate">NIRIKSHAN</span>
+              <img src="/logo.png" alt="Smart Inspect" className="h-8 object-contain" />
+              <span className="font-bold text-base tracking-widest text-white truncate">Smart Inspect</span>
             </div>
           )}
           {!sidebarOpen && !mobileMenuOpen && (

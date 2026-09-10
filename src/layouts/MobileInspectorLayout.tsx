@@ -27,10 +27,10 @@ const MobileInspectorLayout = () => {
       {/* Mobile Header */}
       <header className="bg-primary text-white h-16 flex items-center justify-between px-4 shadow-md z-10 shrink-0">
         <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="Nirikshan Logo" className="h-8 w-auto object-contain" 
+          <img src="/logo.png" alt="Smart Inspect Logo" className="h-8 w-auto object-contain" 
                onError={(e) => e.currentTarget.style.display = 'none'} />
           <div className="flex flex-col items-start">
-             <h1 className="text-lg font-bold tracking-wide leading-none">NIRIKSHAN</h1>
+             <h1 className="text-lg font-bold tracking-wide leading-none">Smart Inspect</h1>
              <span className="text-[9px] text-gray-300 tracking-wider">FIELD OPERATIONS</span>
           </div>
         </div>

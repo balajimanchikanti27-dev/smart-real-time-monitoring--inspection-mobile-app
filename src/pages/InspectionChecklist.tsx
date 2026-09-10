@@ -255,7 +255,7 @@ export default function InspectionChecklistPage() {
       <div className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-4 pb-safe flex justify-between items-center z-10 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
          <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold">
            <Save className="w-4 h-4 text-emerald-600" />
-           Autosaved to NIRIKSHAN cloud
+           Autosaved to Smart Inspect cloud
          </div>
          <div className="flex items-center gap-2">
            <button
